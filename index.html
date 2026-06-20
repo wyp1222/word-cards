@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>学长的单词本</title>
+<style>
+  :root {
+    --bg: #faf8f6;
+    --card-bg: #ffffff;
+    --text: #3d3d3d;
+    --text-light: #8a8a8a;
+    --accent: #c4a882;
+    --accent-light: #e8ddd0;
+    --shadow: rgba(0,0,0,0.04);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 16px 40px;
+  }
+
+  .header {
+    padding: 28px 0 16px;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 10;
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+  .header p {
+    font-size: 13px;
+    color: var(--text-light);
+    margin-top: 4px;
+  }
+
+  .search-wrap {
+    position: sticky;
+    top: 82px;
+    z-index: 9;
+    padding: 8px 0 12px;
+    background: var(--bg);
+  }
+  .search-box {
+    width: 100%;
+    padding: 10px 16px;
+    border: 1.5px solid #e8e0d8;
+    border-radius: 12px;
+    font-size: 15px;
+    background: var(--card-bg);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-box:focus { border-color: var(--accent); }
+  .search-box::placeholder { color: #bbb; }
+
+  .stats {
+    display: flex;
+    gap: 12px;
+    padding: 4px 0 12px;
+    font-size: 13px;
+    color: var(--text-light);
+    justify-content: center;
+  }
+  .stats span { background: var(--accent-light); padding: 2px 10px; border-radius: 20px; color: #6b5a4a; }
+
+  .word-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+  }
+
+  .word-card {
+    background: var(--card-bg);
+    border-radius: 14px;
+    padding: 18px 12px 14px;
+    box-shadow: 0 2px 8px var(--shadow);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .word-card:active { transform: scale(0.96); }
+  .word-card .word {
+    font-size: 17px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    text-align: center;
+  }
+  .word-card .details {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    margin-top: 0;
+    text-align: center;
+  }
+  .word-card.expanded .details {
+    max-height: 300px;
+    opacity: 1;
+    margin-top: 10px;
+  }
+  .word-card .details .chinese {
+    font-size: 15px;
+    color: #5a5a5a;
+    margin-bottom: 6px;
+  }
+  .word-card .details .example {
+    font-size: 12px;
+    color: var(--text-light);
+    line-height: 1.5;
+    padding: 0 4px;
+  }
+
+  .empty {
+    text-align: center;
+    padding: 60px 0;
+    color: var(--text-light);
+    font-size: 14px;
+  }
+
+  .footer {
+    text-align: center;
+    padding: 32px 0 16px;
+    font-size: 12px;
+    color: #ccc;
+  }
+
+  .no-words {
+    text-align: center;
+    padding: 80px 0;
+    color: var(--text-light);
+    font-size: 14px;
+  }
+  .no-words .big { font-size: 40px; margin-bottom: 12px; display: block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>&#x1F4D6; 学长的单词本</h1>
+  <p>更新于 00:34</p>
+</div>
+
+<div class="search-wrap">
+  <input class="search-box" type="text" id="search" placeholder="搜索单词..." autocomplete="off">
+</div>
+
+<div class="stats">
+  <span>共 8 个</span>
+  <span id="filtered-count" style="display:none"></span>
+</div>
+
+<div class="word-grid" id="word-grid">
+  <div class="word-card" onclick="toggleCard(0)">
+    <div class="word">spacious</div>
+    <div class="details">
+      <div class="chinese">宽敞的</div>
+      <div class="example">The living room is very spacious and bright.</div>
+      <div class="example">客厅非常宽敞明亮。</div>
+    </div>
+  </div>
+  <div class="word-card" onclick="toggleCard(1)">
+    <div class="word">spatial</div>
+    <div class="details">
+      <div class="chinese">空间的</div>
+      <div class="example">Children develop spatial awareness through playing.</div>
+      <div class="example">孩子通过玩耍发展空间意识。</div>
+    </div>
+  </div>
+  <div class="word-card" onclick="toggleCard(2)">
+    <div class="word">agent</div>
+    <div class="details">
+      <div class="chinese">代理人；智能体</div>
+      <div class="example">Hermes is an AI agent that helps with tasks.</div>
+      <div class="example">Hermes 是一个帮忙做任务的 AI 智能体。</div>
+    </div>
+  </div>
+  <div class="word-card" onclick="toggleCard(3)">
+    <div class="word">interaction</div>
+    <div class="details">
+      <div class="chinese">互动；交互</div>
+      <div class="example">The interaction between user and AI is smooth.</div>
+      <div class="example">用户和 AI 之间的交互很流畅。</div>
+    </div>
+  </div>
+  <div class="word-card" onclick="toggleCard(4)">
+    <div class="word">activith</div>
+    <div class="details">
+      <div class="chinese">活动</div>
+      <div class="example">Regular physical activity is good for health.</div>
+      <div class="example">规律的体育活动有益健康。</div>
+    </div>
+  </div>
+  <div class="word-card" onclick="toggleCard(5)">
+    <div class="word">actually</div>
+    <div class="details">
+      <div class="chinese">实际上</div>
+      <div class="example">I actually enjoyed the movie more than I expected.</div>
+      <div class="example">我实际上比预期更喜欢这部电影。</div>
+    </div>
+  </div>
+  <div class="word-card" onclick="toggleCard(6)">
+    <div class="word">space</div>
+    <div class="details">
+      <div class="chinese">空间；太空</div>
+      <div class="example">There isn't enough space in this room.</div>
+      <div class="example">这个房间空间不够。</div>
+    </div>
+  </div>
+  <div class="word-card" onclick="toggleCard(7)">
+    <div class="word">addition</div>
+    <div class="details">
+      <div class="chinese">增加；附加；加法</div>
+      <div class="example">In addition to English, she speaks French.</div>
+      <div class="example">除了英语之外，她还会说法语。</div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">加藤惠 · 悄悄帮你打理</div>
+
+<script>
+// All data embedded server-side, no fetch needed
+var WORDS = [{"word": "spacious", "chinese": "宽敞的", "root": "space(空间) + -ious(形容词后缀) → 空间大的", "example": "The living room is very spacious and bright.", "example_cn": "客厅非常宽敞明亮。"}, {"word": "spatial", "chinese": "空间的", "root": "spatium(拉丁语「空间」) + -al(形容词后缀)", "example": "Children develop spatial awareness through playing.", "example_cn": "孩子通过玩耍发展空间意识。"}, {"word": "agent", "chinese": "代理人；智能体", "root": "agere(拉丁语「做」) + -ent(「……的人」) → 做事的人", "example": "Hermes is an AI agent that helps with tasks.", "example_cn": "Hermes 是一个帮忙做任务的 AI 智能体。"}, {"word": "interaction", "chinese": "互动；交互", "root": "inter-(互相) + act(行动) + -ion(名词后缀)", "example": "The interaction between user and AI is smooth.", "example_cn": "用户和 AI 之间的交互很流畅。"}, {"word": "activith", "chinese": "活动", "root": "⚠️ 正确拼写: activity。act(行动) + -ivity(名词后缀)", "example": "Regular physical activity is good for health.", "example_cn": "规律的体育活动有益健康。"}, {"word": "actually", "chinese": "实际上", "root": "actual(实际的) + -ly(副词后缀)", "example": "I actually enjoyed the movie more than I expected.", "example_cn": "我实际上比预期更喜欢这部电影。"}, {"word": "space", "chinese": "空间；太空", "root": "spatium(拉丁语「空间」)", "example": "There isn't enough space in this room.", "example_cn": "这个房间空间不够。"}, {"word": "addition", "chinese": "增加；附加；加法", "root": "add(加) + -ition(名词后缀)", "example": "In addition to English, she speaks French.", "example_cn": "除了英语之外，她还会说法语。"}];
+var expandedIndex = null;
+
+function escapeHtml(text) {
+  var div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function render(list) {
+  var grid = document.getElementById('word-grid');
+  if (!list || list.length === 0) {
+    grid.innerHTML = '<div class="no-words"><span class="big">📭</span><p>还没有单词哦</p></div>';
+    return;
+  }
+  grid.innerHTML = list.map(function(item, i) {
+    return '<div class="word-card" onclick="toggleCard(' + i + ')">' +
+      '<div class="word">' + escapeHtml(item.word) + '</div>' +
+      '<div class="details">' +
+        '<div class="chinese">' + (item.chinese ? escapeHtml(item.chinese) : '') + '</div>' +
+        '<div class="example">' + (item.example ? escapeHtml(item.example) : '') + '</div>' +
+      '</div></div>';
+  }).join('');
+}
+
+function toggleCard(index) {
+  var cards = document.querySelectorAll('.word-card');
+  var card = cards[index];
+  if (!card) return;
+  if (card.classList.contains('expanded')) {
+    card.classList.remove('expanded');
+    expandedIndex = null;
+  } else {
+    // Close others
+    for (var i = 0; i < cards.length; i++) {
+      if (i !== index) cards[i].classList.remove('expanded');
+    }
+    card.classList.add('expanded');
+    expandedIndex = index;
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+document.getElementById('search').addEventListener('input', function() {
+  var q = this.value.toLowerCase().trim();
+  var stats = document.getElementById('filtered-count');
+  if (!q) {
+    render(WORDS);
+    stats.style.display = 'none';
+    return;
+  }
+  var filtered = WORDS.filter(function(w) {
+    return w.word.toLowerCase().indexOf(q) !== -1;
+  });
+  render(filtered);
+  stats.style.display = '';
+  stats.textContent = '匹配 ' + filtered.length + ' 个';
+});
+
+// Init
+render(WORDS);
+</script>
+
+</body>
+</html>
